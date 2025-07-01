@@ -1,0 +1,54 @@
+{
+    "execute": {
+        "10": {
+            "name": "Vaccine Artilleryman",
+            "type": "UNIT",
+            "next": 11
+        },
+        "11": {
+            "name": "작동한다",
+            "type": "ACTION",
+            "next": 12
+        },
+        "12": {
+            "name": "병사 함수 (1)",
+            "type": "FUNCTION",
+            "next": 13
+        },
+        "13": {
+            "type": "ACTION",
+            "name": "발사한다"
+        }
+    },
+    "custom_class": {
+        "class1": {
+            "function": {
+                "1": {
+                    "argument": "None",
+                    "execute": [
+                        {
+                            "id": 10,
+                            "name": "백신 병사",
+                            "next": 11
+                        },
+                        {
+                            "id": 11,
+                            "name": "작동한다",
+                            "next": 12
+                        },
+                        {
+                            "id": 12,
+                            "name": "발사한다",
+                            "next": 13
+                        },
+                        {
+                            "id": 13,
+                            "name": "작동하지 않는다"
+                        }
+                    ],
+                    "return": "None"
+                }
+            }
+        }
+    }
+}

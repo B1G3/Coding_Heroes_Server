@@ -1,0 +1,38 @@
+[입력 블록]
+
+name: True
+
+name: False
+
+name: Virus
+
+name: Broken
+
+[유닛 블록]
+name: FireWall
+
+name: Vaccine Normal
+
+name: Vaccine Artilleryman
+
+name: IDS Agent
+
+[제어 블록]
+For
+
+While
+
+IF
+
+[행동 블록]
+작동한다
+
+작동하지 않는다 
+
+조준한다
+
+발사한다
+
+센다
+
+고친다
