@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi import WebSocket
 from pydantic import BaseModel
 
-from llm_handler import analyze_code
+from llm_handler import analyze_code, answer, answer_stream
 
 import logging
 
@@ -16,15 +16,16 @@ logging.basicConfig(
 
 app = FastAPI()
 
-
-class CodeExecutionData(BaseModel):
+"""
+블록 코딩한거 피드백 API
+"""
+class BlockData(BaseModel):
     execute: list
     custom_class: list
 
 
-@app.post("/debug")
-async def debug(data: CodeExecutionData):
-
+@app.post("/block-feedback")
+async def block_feedback(data: BlockData):
 
     input_dict = {
         "execute": data.execute,
@@ -40,6 +41,43 @@ async def debug(data: CodeExecutionData):
 
 
 
+"""
+질문(텍스트)에 대한 응답(텍스트) ==> 테스트용
+"""
+class TextQuestionData(BaseModel):
+    question: str
+
+
+@app.post("/test-text-qa")
+async def test_text_qa(data: TextQuestionData):
+    """
+    텍스트 질문을 받아서 LLM으로 처리하고 텍스트로 응답하는 테스트용 API
+    """
+    try:
+        logging.info(f"텍스트 질문 수신: {data.question}")
+        
+        # LLM을 통한 답변 생성 (비스트리밍)
+        response_text = answer(data.question)
+        logging.info(f"LLM 답변 생성 완료: {response_text}")
+        
+        return {
+            "question": data.question,
+            "answer": response_text,
+            "status": "success"
+        }
+        
+    except Exception as e:
+        logging.error(f"텍스트 QA 처리 중 오류 발생: {str(e)}")
+        return {
+            "question": data.question,
+            "answer": f"오류 발생: {str(e)}",
+            "status": "error"
+        }
+
+
+"""
+질문(음성)에 대한 응답(텍스트)
+"""
 import whisper
 import numpy as np
 import soundfile as sf
@@ -75,12 +113,20 @@ async def qa_chatbot(websocket: WebSocket):
 
         # STT 처리 (리샘플링된 데이터 사용)
         result = model.transcribe(audio_resampled, language="ko")
-        result_text = result['text']
-        logging.info(f"STT 결과: {result_text}")
+        stt_text = result['text']
+        logging.info(f"STT 결과: {stt_text}")
 
-        # 결과 전송
-        await websocket.send_text(result_text)
-        logging.debug("STT 결과 전송 완료")
+        # LLM을 통한 스트리밍 답변 생성 및 전송
+        logging.info("LLM 스트리밍 답변 시작")
+        full_response = ""
+        
+        for chunk in answer_stream(stt_text):
+            full_response += chunk
+            # 각 청크를 클라이언트에 전송
+            await websocket.send_text(chunk)
+            logging.info(f"스트림 청크 전송: {chunk}")
+        
+        logging.info(f"LLM 스트리밍 답변 완료: {full_response}")
 
     except Exception as e:
         logging.error(f"STT 처리 중 오류 발생: {str(e)}")
@@ -91,12 +137,9 @@ async def qa_chatbot(websocket: WebSocket):
 
 
 
-@app.post("/ai-feedback")
-async def get_feedback(file: UploadFile = File(...)):
-    audio_bytes = await file.read()
-    # Whisper는 numpy array 또는 파일 경로를 입력으로 받음
-    with open("temp.wav", "wb") as f:
-        f.write(audio_bytes)
-    result = model.transcribe("temp.wav")
-    return {"text": result["text"]}
+
+
+
+
+
 

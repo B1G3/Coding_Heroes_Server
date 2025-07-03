@@ -27,7 +27,7 @@
                 {
                     "block_id": "4",
                     "type": "INPUT",
-                    "name": "같다(==)",
+                    "name": "같다(==)",                                                                                                                                                                                                                         
                     "input": "None",
                     "output": "4"
                 },

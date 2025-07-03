@@ -3,6 +3,7 @@ import websockets
 import sounddevice as sd
 import numpy as np
 import soundfile as sf
+import time
 
 import matplotlib.pyplot as plt
 
@@ -27,9 +28,24 @@ async def send_audio_file():
         await ws.send(audio_bytes)
         print("PCM 데이터 전송 완료")
 
-        # 응답 수신
-        response = await ws.recv()
-        print("STT 결과: ", response)
+        # 스트리밍 응답 수신
+        print("🤖 AI 응답:")
+        full_response = ""
+        
+        while True:
+            try:
+                # 각 청크를 개별적으로 수신
+                chunk = await asyncio.wait_for(ws.recv(), timeout=10)
+                full_response += chunk
+                print(chunk, end="", flush=True)  # 실시간 타이핑 효과
+            except asyncio.TimeoutError:
+                print("\n✅ 스트리밍 완료")
+                break
+            except websockets.exceptions.ConnectionClosed:
+                print("\n🔌 연결 종료")
+                break
+        
+        print(f"\n📝 전체 응답 길이: {len(full_response)}자")
 
 
 # 파일이 존재하는지 확인하는 함수 추가
