@@ -6,6 +6,18 @@
             "lines": [
                 {
                     "id": "2",
+                    "name": "start",
+                    "type": "None",
+                    "plugs": {
+                        "input": {
+                            "main": "None",
+                            "sub": "None"
+                        },  
+                        "output": "2"
+                    }
+                }, 
+                {
+                    "id": "2",
                     "name": "move",
                     "type": "action",
                     "plugs": {
