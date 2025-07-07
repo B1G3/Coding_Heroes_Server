@@ -5,6 +5,14 @@ from pydantic import BaseModel
 from llm_handler import analyze_code, answer, answer_stream
 
 import logging
+import asyncio
+import whisper
+import numpy as np
+import soundfile as sf
+import io
+import librosa
+import base64
+import uuid
 
 logging.basicConfig(
     level=logging.INFO,
@@ -24,7 +32,7 @@ class BlockData(BaseModel):
     custom_class: list
 
 
-@app.post("/block-feedback")
+@app.post("/block")
 async def block_feedback(data: BlockData):
 
     input_dict = {
@@ -78,14 +86,9 @@ async def test_text_qa(data: TextQuestionData):
 """
 질문(음성)에 대한 응답(텍스트)
 """
-import whisper
-import numpy as np
-import soundfile as sf
-import io
-import librosa
-
 # stt 모델 
 model = whisper.load_model("turbo")
+
 
 
 # 한 번에 오디오 데이터를 받아서 STT 처리
@@ -132,6 +135,94 @@ async def qa_chatbot(websocket: WebSocket):
         logging.error(f"STT 처리 중 오류 발생: {str(e)}")
         await websocket.send_text(f"오류 발생: {str(e)}")
     
+    finally:
+        logging.info("WebSocket 연결 종료")
+
+
+# (가상) TTS 함수 - 실제 구현 대신 예시용
+async def fake_tts(text: str) -> bytes:
+    await asyncio.sleep(0.5)  # TTS 처리 시간 시뮬레이션
+    return b"FAKE_TTS_AUDIO_DATA"  # 실제로는 생성된 음성 데이터 반환
+
+
+# 새로운 멀티모달 WebSocket API
+@app.websocket("/ws/qa-multimodal")
+async def qa_multimodal(websocket: WebSocket):
+    await websocket.accept()
+    logging.info("WebSocket 연결됨")
+
+    try:
+        session_id = str(uuid.uuid4())
+        audio_data = await websocket.receive_bytes()
+        # numpy 배열로 변환 
+        audio_array = np.frombuffer(audio_data, dtype=np.float32)
+
+        # 44100Hz에서 16000Hz로 리샘플링
+        original_sr = 44100
+        target_sr = 16000
+        audio_resampled = librosa.resample(
+            y=audio_array, 
+            orig_sr=original_sr, 
+            target_sr=target_sr
+        )
+        # 1. STT 처리 및 텍스트 응답
+        result = model.transcribe(audio_resampled, language="ko")
+        stt_text = result['text']
+        logging.info(f"STT 결과: {stt_text}")
+
+        # 2. LLM 답변 및 TTS를 비동기로 처리
+        async def llm_and_tts():
+            llm_full_response = None
+            try:
+                llm_full_response = await asyncio.to_thread(answer, stt_text)
+                await websocket.send_json({
+                    "type": "llm_response",
+                    "session_id": session_id,
+                    "text": llm_full_response
+                })
+            except Exception as e:
+                await websocket.send_json({
+                    "type": "llm_response",
+                    "session_id": session_id,
+                    "error": str(e)
+                })
+                return
+            # LLM 끝나면 TTS를 또 비동기로
+            async def tts_task():
+                try:
+                    tts_audio = await fake_tts(llm_full_response)
+                    tts_audio_b64 = base64.b64encode(tts_audio).decode("utf-8")
+                    await websocket.send_json({
+                        "type": "tts_audio",
+                        "session_id": session_id,
+                        "audio": tts_audio_b64
+                    })
+                    logging.info(f"TTS 음성 전송 완료")
+                except Exception as e:
+                    await websocket.send_json({
+                        "type": "tts_audio",
+                        "session_id": session_id,
+                        "error": str(e)
+                    })
+            asyncio.create_task(tts_task())
+
+        # LLM+TTS 태스크를 비동기로 시작
+        asyncio.create_task(llm_and_tts())
+
+        # STT 결과를 클라이언트에 전송 (이건 await)
+        await websocket.send_json({
+            "type": "stt_result",
+            "session_id": session_id,
+            "text": stt_text
+        })
+
+    except Exception as e:
+        logging.error(f"처리 중 오류 발생: {str(e)}")
+        await websocket.send_json({
+            "type": "error",
+            "session_id": session_id if 'session_id' in locals() else None,
+            "error": str(e)
+        })
     finally:
         logging.info("WebSocket 연결 종료")
 

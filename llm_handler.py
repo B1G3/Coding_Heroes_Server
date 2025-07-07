@@ -63,22 +63,22 @@ def answer(user_question: str) -> str:
     return response.content
 
 
-def answer_stream(user_question: str):
-    """
-    사용자의 질문에 대한 답변을 스트리밍으로 생성하는 메소드
-    """
-    user_prompt = f"""
-사용자가 다음과 같이 질문했습니다:
-"{user_question}"
+# def answer_stream(user_question: str):
+#     """
+#     사용자의 질문에 대한 답변을 스트리밍으로 생성하는 메소드
+#     """
+#     user_prompt = f"""
+# 사용자가 다음과 같이 질문했습니다:
+# "{user_question}"
 
-이 질문에 대해 친절하고 도움이 되는 답변을 해주세요.
+# 이 질문에 대해 친절하고 도움이 되는 답변을 해주세요.
 
-"""
+# """
     
-    # 스트리밍 응답 생성
-    for chunk in llm.stream([
-        SystemMessage(content=SYSTEM_PROMPT),
-        HumanMessage(content=user_prompt)
-    ]):
-        if chunk.content:
-            yield chunk.content
+#     # 스트리밍 응답 생성
+#     for chunk in llm.stream([
+#         SystemMessage(content=SYSTEM_PROMPT),
+#         HumanMessage(content=user_prompt)
+#     ]):
+#         if chunk.content:
+#             yield chunk.content
