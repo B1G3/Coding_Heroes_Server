@@ -3,14 +3,14 @@ from dotenv import load_dotenv
 from elevenlabs.client import ElevenLabs
 import logging
 
+load_dotenv() 
 
 class TTS:
   def __init__(self):
-    load_dotenv()
     self.elevenlabs = ElevenLabs(api_key=os.getenv("ELEVENLABS_API_KEY")) 
     self.logger = logging.getLogger(self.__class__.__name__)
 
-  def run(self, output_format):
+  def run(self, text: str, output_format: str):
     try:
       audio = self.elevenlabs.text_to_speech.convert(
           text=text,
