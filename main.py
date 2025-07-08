@@ -11,6 +11,18 @@ import uuid
 
 import llm_handler
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 또는 ["http://localhost:3000"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -64,7 +76,7 @@ async def speech_to_text(audio_file: UploadFile = File(...)):
     """
     try:
         audio_data = await audio_file.read()
-        stt_text = stt.run(audio_data)
+        stt_text = await stt.run(audio_data)
         
         return STTResponse(
             stt_result=stt_text,
@@ -78,8 +90,8 @@ async def speech_to_text(audio_file: UploadFile = File(...)):
             status=f"error: {str(e)}"
         )
 
+import os
 
-        
 
 @app.post("/qa_chatbot", response_model=ChatbotResponse)
 async def qa_chatbot(req: TextRequest):
@@ -93,14 +105,24 @@ async def qa_chatbot(req: TextRequest):
         # 2. TTS 처리 (LLM 답변을 음성으로 변환)
         audio = tts.run(answer_text, "pcm_16000")
         audio_bytes = b''.join(audio)
-        tts_audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
+        b64_data = base64.b64encode(audio_bytes).decode("utf-8")
+
+        from datetime import datetime
+        output_dir = "./outputs"
+        os.makedirs(output_dir, exist_ok=True)  # 디렉토리 없으면 생성
+
+        timestamp = datetime.now().strftime("%m%d_%H%M")
+        filename = os.path.join(output_dir, f"audio_{timestamp}.wav")
+
+        save_pcm_as_wav(audio_bytes, filename)
 
         return ChatbotResponse(
             answer=answer_text,
-            audio=tts_audio_b64,
+            audio=b64_data,
             format="wav",
             status="success"
         )
+    
     except Exception as e:
         logging.error(f"qa_chatbot_tts 처리 중 오류 발생: {str(e)}")
         return ChatbotResponse(
@@ -109,7 +131,17 @@ async def qa_chatbot(req: TextRequest):
             format="wav",
             status=f"오류 발생: {str(e)}"
         )
-    
+
+import wave
+def save_pcm_as_wav(pcm_data: bytes, filename: str, sample_rate=16000):
+    with wave.open(filename, 'wb') as wav_file:
+        wav_file.setnchannels(1)         # mono
+        wav_file.setsampwidth(2)         # 16-bit
+        wav_file.setframerate(sample_rate)
+        wav_file.writeframes(pcm_data)   # write raw PCM data
+
+    print(f"저장 완료: {filename}")
+
 
 # @app.post("/qa_chatbot", response_model=ChatbotResponse)
 # async def qa_chatbot(req: TextRequest):
