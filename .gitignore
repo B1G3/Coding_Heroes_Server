@@ -1,6 +1,8 @@
 ﻿*.env
 *.wav
+*.db
 __pycache__
 
 /models
 /outputs
+

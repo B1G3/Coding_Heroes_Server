@@ -29,12 +29,12 @@ def analyze_code(json_data: dict) -> str:
 
 
     user_prompt = f"""
-다음은 사용자의 블록 코딩 결과야:\n
-```json\n
-{json.dumps(json_data, indent=2, ensure_ascii=False)}\n
-```\n
-이 구조를 분석해서 피드백을 줘
-"""
+        다음은 사용자의 블록 코딩 결과야:\n
+        ```json\n
+        {json.dumps(json_data, indent=2, ensure_ascii=False)}\n
+        ```\n
+        이 구조를 분석해서 피드백을 줘
+    """
     
     response = llm.invoke([
         SystemMessage(content=SYSTEM_PROMPT),
@@ -82,3 +82,7 @@ def answer(user_question: str) -> str:
 #     ]):
 #         if chunk.content:
 #             yield chunk.content
+
+
+from langchain.document_loaders import TextLoader
+from
