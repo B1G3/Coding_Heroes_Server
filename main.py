@@ -4,9 +4,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from core.api.ai_npc import router as ai_npc_router
 from core.database import init_db
 
+"""
+로깅 시스템의 전체적인 설정(글로벌 설정)
+로그 레벨, 출력 포맷, 파일 저장 위치 등을 한번에 지정
+보통 프로그램의 진입점에서 한번만 호출한다.
+이 설정은 전체 애플리케이션에 적용된다.
+"""
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     handlers=[
         logging.StreamHandler()
     ]
@@ -28,7 +34,7 @@ app = FastAPI(
 
 """
 @app.on_event("startup")
-FastAIP의 이벤트 핸들러 데코레이터
+FastAPI의 이벤트 핸들러 데코레이터
 - FastAPI 앱이 시작될 때 자동으로 실행되는 함수를 정의한다.
 - 앱이 완전히 시작되기 전 필요한 초기화 작업을 수행한다.
 
