@@ -1,4 +1,8 @@
 import logging
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from core.api.ai_npc import router as ai_npc_router
+from core.database import init_db
 
 logging.basicConfig(
     level=logging.INFO,
@@ -7,3 +11,44 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+
+"""
+FastAPI 앱 인스턴스 생성
+: app은 FastAPI 애플리케이션의 매인 객체
+uvicorn이 main:app에서 app 객체를 찾아 서버를 시작한다.  
+"""
+# FastAPI 앱 생성
+app = FastAPI(
+    title="Coding Heroes",
+    description="API",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
+
+"""
+@app.on_event("startup")
+FastAIP의 이벤트 핸들러 데코레이터
+- FastAPI 앱이 시작될 때 자동으로 실행되는 함수를 정의한다.
+- 앱이 완전히 시작되기 전 필요한 초기화 작업을 수행한다.
+
+"startup": 앱 시작 시
+"shutdown": 앱 종료 시
+"""
+
+# 앱 시작 시 데이터베이스 초기화
+@app.on_event("startup")
+async def startup_event():
+    init_db()
+
+# 미들웨어 추가
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 라우터 등록
+app.include_router(ai_npc_router, prefix="/ai_npc")
