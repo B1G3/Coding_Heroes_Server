@@ -19,7 +19,7 @@ class Message(Base):
     __tablename__ = "messages"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    session_id = Column(String, index=True)
+    conversation_id = Column(String, index=True)
     user_id = Column(String, ForeignKey("users.user_id"))
     role = Column(String)
     content = Column(Text)
