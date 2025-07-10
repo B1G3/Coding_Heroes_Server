@@ -1,4 +1,4 @@
-from tts import TTS
+from core.tts import TTS
 import wave 
 import datetime
 

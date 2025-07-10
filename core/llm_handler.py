@@ -18,10 +18,11 @@ from langchain.schema import SystemMessage, HumanMessage
 # temperature: 값이 높을수록 창의적이고 다양한 결과, 낮을수록 일관되고 예측 가능한 결과
 # 정답이 존재하는 문제 (수학, 규칙, 코드 피드백 등) → temperature = 0
 # 게임 대사, 창의적 문장, 마케팅 문구, 이름 생성 등 → temperature = 0.7 ~ 1.0
-llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+llm = ChatOpenAI(model="gpt-4o", temperature=0)
+# llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
 
 # --- system_prompt.txt 파일에서 불러오기 ---
-with open("system_prompt_0703_v2.txt", "r", encoding="utf-8") as f:
+with open("system_prompt/system_prompt_0709.txt", "r", encoding="utf-8") as f:
     SYSTEM_PROMPT = f.read()
 
 
@@ -49,11 +50,11 @@ def answer(user_question: str) -> str:
     사용자의 질문에 대한 답변을 생성하는 메소드 (비스트리밍)
     """
     user_prompt = f"""
-사용자가 다음과 같이 질문했습니다:
-"{user_question}"
+    사용자가 다음과 같이 질문했습니다:
+    "{user_question}"
 
-이 질문에 대해 친절하고 도움이 되는 답변을 해주세요.
-"""
+    이 질문에 대해 친절하고 도움이 되는 답변을 해주세요.
+    """
     
     response = llm.invoke([
         SystemMessage(content=SYSTEM_PROMPT),
@@ -63,26 +64,9 @@ def answer(user_question: str) -> str:
     return response.content
 
 
-# def answer_stream(user_question: str):
-#     """
-#     사용자의 질문에 대한 답변을 스트리밍으로 생성하는 메소드
-#     """
-#     user_prompt = f"""
-# 사용자가 다음과 같이 질문했습니다:
-# "{user_question}"
-
-# 이 질문에 대해 친절하고 도움이 되는 답변을 해주세요.
-
-# """
-    
-#     # 스트리밍 응답 생성
-#     for chunk in llm.stream([
-#         SystemMessage(content=SYSTEM_PROMPT),
-#         HumanMessage(content=user_prompt)
-#     ]):
-#         if chunk.content:
-#             yield chunk.content
+if __name__ == "__main__":
+    user_question = input("질문을 입력하세요: ")
+    print("답변:")
+    print(answer(user_question))
 
 
-from langchain.document_loaders import TextLoader
-from

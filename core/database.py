@@ -1,11 +1,11 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from core.models import Base, User, Message
+# from sqlalchemy import create_engine
+# from sqlalchemy.orm import sessionmaker
+# from core.models import Base, User, Message
 
-DB_URL = "sqlite:///coding-heroes.db"
-engine = create_engine(DB_URL, echo=False)
-SessionLocal = sessionmaker(bind=engine)
-Base.metadata.create_all(bind=engine)
+# DB_URL = "sqlite:///coding-heroes.db"
+# engine = create_engine(DB_URL, echo=False)
+# SessionLocal = sessionmaker(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
 
 
