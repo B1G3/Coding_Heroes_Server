@@ -44,6 +44,7 @@ async def text_to_speech(text: str):
         audio_bytes = b''.join(audio)
         b64_data = base64.b64encode(audio_bytes).decode("utf-8")
 
+        # output 디렉토리에 저장 (나중에 주석처리하기)
         output_dir = "./outputs"
         os.makedirs(output_dir, exist_ok=True)  # 디렉토리 없으면 생성
 
@@ -51,6 +52,9 @@ async def text_to_speech(text: str):
         filename = os.path.join(output_dir, f"audio_{timestamp}.wav")
 
         save_pcm_as_wav(audio_bytes, filename)
+
+
+        return b64_data
     
     except Exception as e:
         logging.error(f"qa_chatbot_tts 처리 중 오류 발생: {str(e)}")
