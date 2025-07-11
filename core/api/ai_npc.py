@@ -50,6 +50,9 @@ async def stt(audio_file: UploadFile = File(...)):
         )
 
 
+TEMP_USER_ID = "u001"
+TEMP_CONV_ID = "s001"
+
 
 
 from core.services import get_ai_response, text_to_speech
@@ -61,7 +64,7 @@ async def qa_chatbot(req: TextRequest):
     """
     try:
         # 1. LLM을 통한 답변 생성
-        text_data = get_ai_response(req.text)
+        text_data = get_ai_response(req.text, TEMP_USER_ID, TEMP_CONV_ID)
         logging.info(f"ai_response: {text_data}")
 
         # # 2. TTS 처리 (LLM 답변을 음성으로 변환)
@@ -92,7 +95,7 @@ async def qa_chatbot(req: TextRequest):
     """
     (테스트용) 텍스트 질문에 대한 LLM 답변 생성하여 텍스트만 반환하는 API
     """
-    return get_ai_response(req.text)
+    return get_ai_response(req.text, TEMP_USER_ID, TEMP_CONV_ID)
     
 
 # tts 테스트 api

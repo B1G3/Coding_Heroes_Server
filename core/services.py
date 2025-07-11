@@ -3,7 +3,7 @@ import base64
 import os
 from datetime import datetime
 
-from core.llm_handler import answer
+from core.llm_handler import chat
 
 
 from core.stt import STT
@@ -29,8 +29,8 @@ async def speech_to_text(audio_file):
 
 
 # llm 응답
-def get_ai_response(question: str):
-    return answer(question)
+def get_ai_response(question: str, user_id: str, conversation_id: str):
+    return chat(question, user_id, conversation_id)
 
 
 

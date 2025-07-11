@@ -63,9 +63,3 @@ if __name__ == "__main__":
     init_db()
     # add_sample_user()
     test_conversation() 
-
-
-
-if __name__ == "__main__":
-    init_db()
-    # add_sample_user_and_messages()
