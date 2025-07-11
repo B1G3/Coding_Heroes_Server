@@ -1,7 +1,7 @@
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from core.api.ai_npc import router as ai_npc_router
+from core.api.ai_npc_api import router as ai_npc_router
 from core.database import init_db
 
 """
@@ -24,7 +24,7 @@ FastAPI 앱 인스턴스 생성
 uvicorn이 main:app에서 app 객체를 찾아 서버를 시작한다.  
 """
 # FastAPI 앱 생성
-app = FastAPI(
+app = FastAPI(  
     title="Coding Heroes",
     description="API",
     version="1.0.0",

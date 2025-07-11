@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+pydantic
+sqlalchemy
+python-dotenv
+langchain
+langchain-openai
+openai-whisper
+numpy
+librosa
+soundfile
+elevenlabs
+httpx
