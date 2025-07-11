@@ -99,7 +99,7 @@ async def qa_chatbot(req: TextRequest):
     
 
 # tts 테스트 api
-@router.post("/tts")
+@router.post("/tts-test")
 async def tts(req: TextRequest):
     """
     (테스트용) text to speech
