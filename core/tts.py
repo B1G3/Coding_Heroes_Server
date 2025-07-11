@@ -14,17 +14,26 @@ class TTS:
     try:
       audio = self.elevenlabs.text_to_speech.convert(
           text=text,
-          voice_id="BZWuZ6lPLVdYkSXTgt0Y",
-          model_id="eleven_turbo_v2_5",
+          # voice_id="BZWuZ6lPLVdYkSXTgt0Y",
+          voice_id="GhEYxuQNnQe2oNejkNYs",
+          # model_id="eleven_turbo_v2_5",
+          model_id="eleven_multilingual_v2",
           output_format=output_format,
           language_code="ko",
           seed=10000,
+          # voice_settings={
+          #   "speed": 0.9,
+          #   "stability": 0.8,
+          #   "use_speaker_boost": False,
+          #   "similarity_boost": 0.7,
+          #   "style": 0.1
+          # }
           voice_settings={
-            "speed": 0.9,
-            "stability": 0.8,
+            "speed": 0.95,
+            "stability": 0.9,
             "use_speaker_boost": False,
-            "similarity_boost": 0.7,
-            "style": 0.1
+            "similarity_boost": 1.0,
+            "style": 0.3
           }
       )
       return audio
