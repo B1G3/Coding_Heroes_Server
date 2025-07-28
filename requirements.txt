@@ -5,9 +5,16 @@ sqlalchemy
 python-dotenv
 langchain
 langchain-openai
+langchain-anthropic
+openai
 openai-whisper
 numpy
 librosa
 soundfile
 elevenlabs
 httpx
+pytest
+pypdf
+faiss-cpu
+langchain-community
+chromadb
