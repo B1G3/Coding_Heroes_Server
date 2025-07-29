@@ -7,17 +7,20 @@ import logging
 logger = logging.getLogger(__name__)
 logger.info("database logger")
 
-
-DB_URL = "sqlite:///coding-heroes.db"
+from config import DB_URL
 engine = create_engine(DB_URL, echo=False)
-"""
-sessionmaker는 SQLAlchemy에서 session 객체를 생성하는 factory
-"""
 SessionLocal = sessionmaker(bind=engine)
+# sessionmaker는 SQLAlchemy에서 session 객체를 생성하는 factory
 
+
+
+
+# ----------------- main.py에서 서버 실행시 한 번 호출 ---------------
 def init_db():
     Base.metadata.create_all(bind=engine)
 # 테이블이 존재하지 않으면 새로 생성
+
+
 
 
 def select_messages_by_user_and_conversation_id(user_id: str, conversation_id: str) -> str:
@@ -42,6 +45,9 @@ def select_messages_by_user_and_conversation_id(user_id: str, conversation_id: s
         db.close()
 
 
+
+
+
 def add_message(user_id: str, conversation_id: str, role: str, content: str):
     """
     대화 내용을 데이터베이스에 저장하는 함수
@@ -60,6 +66,19 @@ def add_message(user_id: str, conversation_id: str, role: str, content: str):
         db.close()
 
 
+
+
+
+def delete_messages_by_ids(message_ids: list):
+    """
+    메시지 id 리스트를 받아 해당 메시지들을 삭제하는 함수
+    """
+    db = SessionLocal()
+    try:
+        db.query(Message).filter(Message.id.in_(message_ids)).delete(synchronize_session=False)
+        db.commit()
+    finally:
+        db.close()
 
 
 
