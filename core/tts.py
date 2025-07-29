@@ -14,12 +14,11 @@ class TTS:
     try:
       audio = self.elevenlabs.text_to_speech.convert(
           text=text,
-          # voice_id="BZWuZ6lPLVdYkSXTgt0Y",
           voice_id="GhEYxuQNnQe2oNejkNYs",
           # model_id="eleven_turbo_v2_5",
           model_id="eleven_multilingual_v2",
           output_format=output_format,
-          language_code="ko",
+          language_code=None,
           seed=10000,
           # voice_settings={
           #   "speed": 0.9,
