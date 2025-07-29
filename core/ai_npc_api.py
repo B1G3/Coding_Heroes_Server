@@ -7,9 +7,6 @@ import logging
 
 router = APIRouter()
 
-"""
-HTTP POST API - STT, LLM, TTS 기능 분리
-"""
 from fastapi import UploadFile, File
 
 class TextRequest(BaseModel):
@@ -53,8 +50,6 @@ async def stt(audio_file: UploadFile = File(...)):
 TEMP_USER_ID = "u001"
 TEMP_CONV_ID = "s001"
 
-
-
 from core.services import get_ai_response, text_to_speech
 
 @router.post("/qa_chatbot", response_model=ChatbotResponse)
@@ -89,9 +84,11 @@ async def qa_chatbot(req: TextRequest):
 
 
 
+# ----------------------------- test용 api ---------------------------- #
+
 # llm 응답 테스트 api
 @router.post("/llm-response-test")
-async def qa_chatbot(req: TextRequest):
+async def llm_response_test(req: TextRequest):
     """
     (테스트용) 텍스트 질문에 대한 LLM 답변 생성하여 텍스트만 반환하는 API
     """
