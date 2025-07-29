@@ -1,8 +1,9 @@
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from core.api.ai_npc_api import router as ai_npc_router
+from core.ai_npc_api import router as ai_npc_router
 from core.database import init_db
+from core.llm_handler import initialize_chain
 
 """
 로깅 시스템의 전체적인 설정(글로벌 설정)
@@ -42,10 +43,20 @@ FastAPI의 이벤트 핸들러 데코레이터
 "shutdown": 앱 종료 시
 """
 
-# 앱 시작 시 데이터베이스 초기화
+# 앱 시작 시 데이터베이스 초기화 및 chain 초기화
 @app.on_event("startup")
 async def startup_event():
+    # 데이터베이스 초기화
     init_db()
+    
+    # LLM chain 초기화
+    try:
+        initialize_chain()
+        logging.info("LLM chain 초기화 완료")
+    except Exception as e:
+        logging.error(f"LLM chain 초기화 실패: {e}")
+        raise e
+    
 
 # 미들웨어 추가
 app.add_middleware(
