@@ -3,8 +3,9 @@ import base64
 import os
 from datetime import datetime
 
-from core.llm_handler import chat
+from fastapi import UploadFile
 
+from core.llm_handler import chat
 
 from core.stt import STT
 from core.tts import TTS
@@ -16,9 +17,11 @@ tts = TTS()
 
 
 # stt
-async def speech_to_text(audio_file):
+async def speech_to_text(audio_file: UploadFile):
     try:
+        await audio_file.seek(0)  
         audio_data = await audio_file.read()
+        
         result = await stt.run(audio_data)
         return result
 

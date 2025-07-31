@@ -1,9 +1,9 @@
-from fastapi import APIRouter
-from fastapi import UploadFile, File
-from pydantic import BaseModel
-
 import logging
-
+logger = logging.getLogger(__name__)
+import os
+from datetime import datetime
+from fastapi import APIRouter, UploadFile, File
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -26,14 +26,29 @@ class ChatbotResponse(BaseModel):
 
 
 from core.services import speech_to_text
+from core.utils import save_uploaded_audio
 
 @router.post("/stt", response_model=STTResponse)
 async def stt(audio_file: UploadFile = File(...)):
     """
     음성을 텍스트로 변환하는 API (WAV 파일 업로드)
+    
+    요구사항:
+    - 파일 형식: WAV
+    - 샘플링 레이트: 16000Hz (권장)
+    - 비트 깊이: 16-bit
+    - 채널: Mono (1채널)
+    - 파일 크기: 최대 10MB
     """
     try:
+        logger.info(f"audio_file: {audio_file}")
+
+        # 1. 음성파일 임시 저장 (디버깅용)
+        saved_file_path = await save_uploaded_audio(audio_file, prefix="stt")
+        
+        # 2. STT 처리
         text = await speech_to_text(audio_file)
+        logger.info(f"tts result: {text}")
 
         return STTResponse(
             stt_result=text,
@@ -60,7 +75,7 @@ async def qa_chatbot(req: TextRequest):
     try:
         # 1. LLM을 통한 답변 생성
         text_data = get_ai_response(req.text, TEMP_USER_ID, TEMP_CONV_ID)
-        logging.info(f"ai_response: {text_data}")
+        logger.info(f"ai_response: {text_data}")
 
         # # 2. TTS 처리 (LLM 답변을 음성으로 변환)
         b64_data = await text_to_speech(text_data)
