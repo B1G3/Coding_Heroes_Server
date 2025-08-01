@@ -38,10 +38,16 @@ async def stt(audio_file: UploadFile = File(...)):
     - 샘플링 레이트: 16000Hz (권장)
     - 비트 깊이: 16-bit
     - 채널: Mono (1채널)
-    - 파일 크기: 최대 10MB
     """
     try:
         logger.info(f"audio_file: {audio_file}")
+
+        # 파일 형식 검증
+        if audio_file.content_type != 'audio/wav':
+            return STTResponse(
+                stt_result = "",
+                status="error: WAV 파일만 지원됩니다."
+        )
 
         # 1. 음성파일 임시 저장 (디버깅용)
         saved_file_path = await save_uploaded_audio(audio_file, prefix="stt")
