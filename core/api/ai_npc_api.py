@@ -7,8 +7,6 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
-from fastapi import UploadFile, File
-
 class TextRequest(BaseModel):
     text: str
 
