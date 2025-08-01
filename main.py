@@ -1,7 +1,8 @@
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from core.ai_npc_api import router as ai_npc_router
+from core.api.ai_npc_api import router as ai_npc_router
+from core.api.block_coding_api import router as block_coding_api
 from core.database import init_db
 from core.llm_handler import initialize_chain
 
@@ -69,3 +70,4 @@ app.add_middleware(
 
 # 라우터 등록
 app.include_router(ai_npc_router, prefix="/ai_npc")
+app.include_router(block_coding_api, prefix="/block_coding")
