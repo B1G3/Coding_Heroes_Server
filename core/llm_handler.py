@@ -6,13 +6,9 @@ from dotenv import load_dotenv
 load_dotenv()
 from config import CHROMA_DB_PATH, PROMPT_PATH
 
-
-from langchain.schema import SystemMessage, HumanMessage
-from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.prompts import ChatPromptTemplate
-
 
 from core.vector_utils import get_retriever, get_vectorestore, check_chroma_db_status
 
@@ -38,39 +34,49 @@ def setup_chain():
     # ChatPromptTemplate 정의
     prompt_template = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
+        
         ("human", """
+            스테이지 단계: {stage}
+            
             참고 문서:
             {context}
 
-            이전 대화 내용:
-            {conversation_history}
-
             현재 사용자 질문: {user_question}
-
-            이전 대화 내용을 고려하여 사용자의 질문에 대해 친절하고 도움이 되는 답변을 해주세요.
+            
+            위의 스테이지 정보와 참고 문서를 바탕으로 사용자의 질문에 대해 친절하고 도움이 되는 답변을 해주세요.
         """)
     ])
     print("✅ ChatPromptTemplate 생성 완료")
 
     # LLM 및 RAG 체인 구성
+    from langchain_openai import ChatOpenAI
     llm = ChatOpenAI(model="gpt-4o", temperature=0)
-    print("✅ LLM 모델 로드 완료")
+
+    # from langchain_anthropic import ChatAnthropic
+    # llm = ChatAnthropic(
+    #     model="claude-sonnet-4-20250725",
+    #     temperature=0,
+    # )
 
     def format_docs(docs):
         context_str = "\n\n".join(doc.page_content for doc in docs)
         # print("🔎 [RAG] context(문서 내용):\n", context_str)
         return context_str
 
+    def get_stage_query(input_dict):
+        """스테이지 정보를 바탕으로 검색 쿼리 생성"""
+        stage = input_dict["stage"]
+        return f"스테이지 {stage}"
 
-    def get_user_question(input_dict):
-        return input_dict["user_question"]
+    # def get_user_question(input_dict):
+    #     return input_dict["user_question"]
     
     print("🔧 Chain 구성 시작...")
     chain = (
         {
-            "conversation_history": RunnablePassthrough(),
+            "stage": RunnablePassthrough(),
             "user_question": RunnablePassthrough(),
-            "context": RunnablePassthrough() | get_user_question | retriever | format_docs,
+            "context": RunnablePassthrough() | get_stage_query | retriever | format_docs,
         }
         | prompt_template
         | llm
@@ -94,12 +100,13 @@ def is_chain_initialized():
 
 
 # -------------------------------------------------------- 질의응답 ----------------------------------------------------------
-def chat(user_question: str, user_id: str = None, conversation_id: str = None) -> str:
+def chat(user_question: str, stage: str="1", user_id: str = None, conversation_id: str = None) -> str:
     """
-    사용자의 질문에 대한 답변을 생성하는 메소드 (이전 대화 내용 고려)
+    사용자의 질문에 대한 답변을 생성하는 메소드 
     
     Args:
         user_question: 사용자 질문
+        stage: 스테이지 단계 (예: "1", "boss")
         user_id: 사용자 ID (선택사항)
         conversation_id: 대화 세션 ID (선택사항)
     """
@@ -107,80 +114,42 @@ def chat(user_question: str, user_id: str = None, conversation_id: str = None) -
     if not is_chain_initialized():
         initialize_chain()
     
-    # 이전 대화 내용 조회
-    conversation_history = ""
-    if user_id and conversation_id:
-        conversation_history = get_conversation_history(user_id, conversation_id)
-    
     # Chain을 사용하여 응답 생성
     response = chain.invoke({
-        "conversation_history": conversation_history,
+        "stage": stage,
         "user_question": user_question
     })
     
     # 대화 내용 저장 (user_id와 conversation_id가 제공된 경우)
-    if user_id and conversation_id:
-        save_message(user_id, conversation_id, "human", user_question)
-        save_message(user_id, conversation_id, "ai", response)
+    # if user_id and conversation_id:
+    #     save_message(user_id, conversation_id, "human", user_question)
+    #     save_message(user_id, conversation_id, "ai", response)
     
     return response
 
 
+# from core.database import select_messages_by_user_and_conversation_id, add_message
 
-from core.database import select_messages_by_user_and_conversation_id, add_message
-
-
-
-def get_conversation_history(user_id: str, conversation_id: str) -> str:
-    """
-    user_id, conv_id로 대화 히스토리 조회
-    """
-    messages = select_messages_by_user_and_conversation_id(user_id, conversation_id)
-
-    conversation_history = []
-    for msg in messages:
-        role = "사용자" if msg.role == "human" else "AI"
-        conversation_history.append(f"{role}: {msg.content}")
-
-    history = "\n".join(conversation_history)
-    
-    return history
-
-
-
-def save_message(user_id: str, conversation_id: str, role: str, content: str):
-    """
-    메시지 저장
-    """
-    return add_message(user_id, conversation_id, role, content)
-
-
-# -------------------------------------------------------- 블록 피드백 ----------------------------------------------------------
-# def analyze_blocks(json_data: dict) -> str: 
-#     user_prompt = f"""
-#         다음은 사용자의 블록 코딩 결과야:\n
-#         ```json\n
-#         {json.dumps(json_data, indent=2, ensure_ascii=False)}\n
-#         ```\n
-#         이 구조를 분석해서 피드백을 줘
+# def get_conversation_history(user_id: str, conversation_id: str) -> str:
 #     """
+#     user_id, conv_id로 대화 히스토리 조회
+#     """
+#     messages = select_messages_by_user_and_conversation_id(user_id, conversation_id)
+
+#     conversation_history = []
+#     for msg in messages:
+#         role = "사용자" if msg.role == "human" else "AI"
+#         conversation_history.append(f"{role}: {msg.content}")
+
+#     history = "\n".join(conversation_history)
     
-#     response = llm.invoke([
-#         SystemMessage(content=SYSTEM_PROMPT),
-#         HumanMessage(content=user_prompt)
-#     ])
-
-#     return response.content
+#     return history
 
 
 
-
-# # claude 모델
-# from langchain_anthropic import ChatAnthropic
-
-# anthropic_llm = ChatAnthropic(
-#     model="claude-sonnet-4-20250725",
-#     temperature=0,
-
-# )
+# def save_message(user_id: str, conversation_id: str, role: str, content: str):
+#     """
+#     메시지 저장
+#     """
+#     return add_message(user_id, conversation_id, role, content)
 

@@ -33,10 +33,9 @@ async def speech_to_text(audio_file: UploadFile):
 
 # llm 응답
 def get_ai_response(question: str, user_id: str, conversation_id: str):
-    return chat(question, user_id, conversation_id)
-
-
-
+    return chat(user_question=question, 
+                user_id=user_id, 
+                conversation_id=conversation_id)
 
 
 # tts
