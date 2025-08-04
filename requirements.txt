@@ -1,3 +1,4 @@
+python-multipart
 fastapi
 uvicorn
 pydantic
@@ -18,3 +19,4 @@ pypdf
 faiss-cpu
 langchain-community
 chromadb
+langchain-chroma
