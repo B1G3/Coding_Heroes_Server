@@ -12,6 +12,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.now)
 
     messages = relationship("Message", back_populates="user")
+    playrecords = relationship("PlayRecord", back_populates="user")
     # 양방향 관계 설정
     # 한 명의 사용자가 여러 개의 메시지를 가질 수 있음
 
@@ -31,4 +32,13 @@ class Message(Base):
     # back_populates => 양쪽이 서로를 참조할 수 있게 연결하는 키워드
     # 복잡한 쿼리를 짜지 않아도 객체 간 탐색이 자동으로 된다. 
 
+class PlayRecord(Base):
+    __tablename__ = "playrecords"
 
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String, ForeignKey("users.user_id"))
+    json_str = Column(Text, nullable=False)
+    stage = Column(String, nullable=False)
+    timestamp = Column(DateTime, default=datetime.now)
+
+    user = relationship("User", back_populates="playrecords")
