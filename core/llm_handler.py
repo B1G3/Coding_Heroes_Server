@@ -14,6 +14,7 @@ from core.vector_utils import get_retriever, get_vectorestore, check_chroma_db_s
 
 chain = None
 
+
 # -------------------------------------------------------- chain 생성 (서버 실행시 한번만 호출) ----------------------------------------------------------
 def setup_chain():
     global chain
@@ -36,14 +37,11 @@ def setup_chain():
         ("system", SYSTEM_PROMPT),
         
         ("human", """
-            스테이지 단계: {stage}
-            
-            참고 문서:
-            {context}
+            참고 스테이지 문서: {context}
 
-            현재 사용자 질문: {user_question}
-            
-            위의 스테이지 정보와 참고 문서를 바탕으로 사용자의 질문에 대해 친절하고 도움이 되는 답변을 해주세요.
+            플레이어의 블록 코딩 json: {json_str}
+
+            플레이어의 질문: {user_question}
         """)
     ])
     print("✅ ChatPromptTemplate 생성 완료")
@@ -74,8 +72,8 @@ def setup_chain():
     print("🔧 Chain 구성 시작...")
     chain = (
         {
-            "stage": RunnablePassthrough(),
             "user_question": RunnablePassthrough(),
+            "json_str": RunnablePassthrough(),
             "context": RunnablePassthrough() | get_stage_query | retriever | format_docs,
         }
         | prompt_template
@@ -99,6 +97,9 @@ def is_chain_initialized():
     return chain is not None
 
 
+
+from core.database import select_playrecord
+
 # -------------------------------------------------------- 질의응답 ----------------------------------------------------------
 def chat(user_question: str, stage: str="1", user_id: str = None, conversation_id: str = None) -> str:
     """
@@ -114,10 +115,13 @@ def chat(user_question: str, stage: str="1", user_id: str = None, conversation_i
     if not is_chain_initialized():
         initialize_chain()
     
+    json_str = select_playrecord(user_id=user_id, stage=stage)
+
     # Chain을 사용하여 응답 생성
     response = chain.invoke({
         "stage": stage,
-        "user_question": user_question
+        "json_str": json_str,
+        "user_question": user_question,
     })
     
     # 대화 내용 저장 (user_id와 conversation_id가 제공된 경우)
