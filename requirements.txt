@@ -12,7 +12,7 @@ openai-whisper
 numpy
 librosa
 soundfile
-elevenlabs
+requests
 httpx
 pytest
 pypdf
@@ -20,3 +20,6 @@ faiss-cpu
 langchain-community
 chromadb
 langchain-chroma
+accelerate
+faster-whisper
+websockets
