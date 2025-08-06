@@ -2,8 +2,9 @@ import logging
 logger = logging.getLogger(__name__)
 import os
 from datetime import datetime
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File, WebSocket
 from pydantic import BaseModel
+
 
 router = APIRouter()
 
@@ -19,8 +20,6 @@ class ChatbotResponse(BaseModel):
     audio: str  # base64 인코딩된 오디오 데이터
     format: str
     status: str
-
-
 
 
 from core.services import speech_to_text
@@ -65,6 +64,17 @@ async def stt(audio_file: UploadFile = File(...)):
             status=f"error: {str(e)}"
         )
 
+# # WebSocket을 통한 STT 스트리밍
+# @router.websocket("/stt_stream")
+# async def stt_stream(websocket: WebSocket):
+#     """
+#     WebSocket을 통한 실시간 STT 스트리밍 API
+#     """
+#     from core.stt_stream import STTStream
+    
+#     stt_stream = STTStream()
+#     await stt_stream.process_audio_stream(websocket, None)
+
 
 TEMP_USER_ID = "u001"
 TEMP_CONV_ID = "s001"
@@ -99,10 +109,6 @@ async def qa_chatbot(req: TextRequest):
             status=f"오류 발생: {str(e)}"
         )
 
-
-
-
-
 # ----------------------------- test용 api ---------------------------- #
 
 # llm 응답 테스트 api
@@ -122,3 +128,22 @@ async def tts(req: TextRequest):
     """
     return await text_to_speech(req.text)
     
+
+
+
+# ------------------------ 플레이 기록 -------------------------------
+from core.database import save_playrecord
+
+class CodingResult(BaseModel):
+    stage: str
+    json_str: str
+
+@router.post("/playrecord")
+async def block_coding(request: CodingResult):
+    # DB 저장
+    try:
+        save_playrecord(TEMP_USER_ID, request.stage, request.json_str)
+        return {"status": "success"}
+
+    except Exception as e:
+        return {"status": f"오류 발생: {str(e)}"}
