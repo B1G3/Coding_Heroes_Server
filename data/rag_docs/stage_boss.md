@@ -17,14 +17,30 @@
 - 백신 포병이 트로이를 처리하는 경우
 ```json
 {
-  "unit": "백신 포병",
   "line": [
     {
       "block_id": 1,
+      "type": "UNIT",
+      "name": "Start",
+      "input": null,
+      "args": null,
+      "next": 2,
+    },
+    {
+      "block_id": 2,
       "type": "FUNCTION",
       "name": "function1",
+      "input": null,
       "args": ["트로이"],
-      "next": null
+      "next": 3
+    },
+    {
+      "block_id": 3,
+      "type": "UNIT",
+      "name": "백신 멍멍이",
+      "input": null,
+      "args": null,
+      "next": null,
     }
   ],
   "custom_function": [
@@ -42,13 +58,15 @@
           "type": "CONTROL",
           "name": "반복한다",
           "input": null,
+          "args": null,
           "next": 12
         },
         {
           "block_id": 12,
           "type": "CONTROL",
-          "name": "If See",
+          "name": "만약 본다면",
           "input": "virus",
+          "args": null,
           "next": 13
         },
         {
@@ -56,6 +74,7 @@
           "type": "ACTION",
           "name": "이동한다",
           "input": null,
+          "args": null,
           "next": 14
         },
         {
@@ -63,6 +82,7 @@
           "type": "ACTION",
           "name": "공격한다",
           "input": null,
+          "args": null,
           "next": null
         }
       ],
