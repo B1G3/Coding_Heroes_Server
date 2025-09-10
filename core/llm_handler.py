@@ -34,17 +34,19 @@ def prompttemplate():
     # 2) Generate PROMPT TEMPLATE
     prompt_template = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
-        
         ("human", """
-            참고 스테이지 문서: {context}
+# 플레이어의 질문:{user_question}
 
-            플레이어의 블록 코딩 json: {json_str}
+# 플레이어의 블록 코딩
+```json
+{json_str}
+```
 
-            플레이어의 질문: {user_question}
+# 참고 스테이지 문서
+{context}
 
-            플레이어의 블록 코딩 json은 플레이어 질문이 블록 코딩에 대한 피드백을 요구할 때만 참고해.
-            단순히 인사를 하거나 게임 시스템에 대한 질문을 할 때는 블록 코딩 json을 참고할 필요 없어.
-            
+플레이어의 블록 코딩 json은 플레이어 질문이 블록 코딩에 대한 피드백을 요구할 때만 참고해.
+단순히 인사를 하거나 게임 시스템에 대한 질문을 할 때는 블록 코딩 json을 참고할 필요 없어.
         """)
     ])
     return prompt_template
@@ -57,20 +59,24 @@ def setup_chain():
         # print("🔎 [RAG] context(문서 내용):\n", context_str)
         return context_str
 
-    def get_stage_query(input_dict):
-        """스테이지 정보를 바탕으로 검색 쿼리 생성"""
-        stage = input_dict["stage"]
+    def get_stage_query(input):
+        """스테이지를 바탕으로 검색 쿼리 생성"""
+        stage = input['stage']
         return f"스테이지 {stage}"
+    
+    def user_question(input):
+        return input['user_question']
 
-    # def get_user_question(input_dict):
-    #     return input_dict["user_question"]
+    def json_str(input):
+        return input['json_str']
+        
     
     print("🔧 Chain 구성 시작...")
     chain = (
         {
-            "user_question": RunnablePassthrough(),
-            "json_str": RunnablePassthrough(),
-            "context": RunnablePassthrough() | get_stage_query | get_retriever() | format_docs,
+            "user_question": user_question,
+            "json_str": json_str,
+            "context": get_stage_query | get_retriever() | format_docs,
         }
         | prompttemplate()
         | llm_model()
