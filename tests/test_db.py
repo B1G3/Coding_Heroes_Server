@@ -1,6 +1,6 @@
 from core.database import init_db, delete_messages_by_ids
 
-base_url = "http://localhost:8000"
+base_url = "https://jolly-accepted-bonefish.ngrok-free.app"
 
 
 from core.models import Base, User, Message
@@ -38,8 +38,8 @@ def delete_playrecord_api_test(ids: list):
 if __name__ == "__main__":
     # save_sample_user("u001", "은빈빈")
 
-    playrecord_ids = [1]
-    delete_playrecord_api_test(playrecord_ids)
+    # playrecord_ids = [1]
+    # delete_playrecord_api_test(playrecord_ids)
 
 
         # JSON 구조를 Python dict로 먼저 선언
@@ -54,18 +54,6 @@ if __name__ == "__main__":
             },
             {
                 "block_id": 2,
-                "type": "ACTION",
-                "name": "공격한다",
-                "next": 4
-            },
-            {
-                "block_id": 3,
-                "type": "ACTION",
-                "name": "이동한다",
-                "next": 4
-            },
-            {
-                "block_id": 4,
                 "type": "UNIT",
                 "name": "백신 멍멍이"
             }
@@ -73,3 +61,28 @@ if __name__ == "__main__":
     }
 
     save_playrecord_test(stage, block_data)
+
+
+            # {
+            #     "block_id": 1,
+            #     "type": "UNIT",
+            #     "name": "Start",
+            #     "next": 2
+            # },
+            # {
+            #     "block_id": 2,
+            #     "type": "ACTION",
+            #     "name": "공격한다",
+            #     "next": 4
+            # },
+            # {
+            #     "block_id": 3,
+            #     "type": "ACTION",
+            #     "name": "이동한다",
+            #     "next": 4
+            # },
+            # {
+            #     "block_id": 4,
+            #     "type": "UNIT",
+            #     "name": "백신 멍멍이"
+            # }

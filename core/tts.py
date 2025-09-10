@@ -37,9 +37,9 @@ class TTS:
             "style": style.value,
             "model": "sona_speech_1",
             "voice_settings": {
-                "speed": 1.2,
-                "pitch_shift": 2,
-                "pitch_variance": 1.1
+                "pitch_shift": 1,
+                "pitch_variance": 1.1,
+                "speed": 1.1,
             },
         }
         try:

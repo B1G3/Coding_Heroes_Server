@@ -127,18 +127,20 @@ def select_playrecord(user_id: str, stage: str):
     """
     db = SessionLocal()
     try:
-        json_str = (
+        row = (
             db.query(PlayRecord.json_str)
             .filter_by(
                 user_id=user_id,
                 stage=stage
-            ).order_by(PlayRecord.timestamp.desc())
-            .scalar() # 가장 최신 항목 하나만 가져옴
+            ).order_by(PlayRecord.timestamp.desc(), PlayRecord.id.desc())
+            .limit(1)
+            .first() # 가장 최신 항목 하나만 가져옴
 
         )
-        logger.info(f"json_str => {json_str}")
+        json_str = row[0] if row else ""
+        logger.info("json_str => %s", json_str)
 
-        return json_str or ""
+        return json_str
 
     finally:
         db.close()
