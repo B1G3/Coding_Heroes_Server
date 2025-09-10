@@ -13,3 +13,5 @@ RAG_DOCS_DIR = os.path.join(DATA_DIR, 'rag_docs')
 CHROMA_DB_PATH = os.path.join(DATA_DIR, 'chroma_db')
 DB_PATH = os.path.join(DATA_DIR, "coding-heroes.db")
 DB_URL = f"sqlite:///{DB_PATH}"
+
+EMBEDDING_MODEL_NAME = "voyage-3.5-lite"

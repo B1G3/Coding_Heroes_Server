@@ -10,15 +10,15 @@ import os
 import glob
 from uuid import uuid4
 
+from config import CHROMA_DB_PATH, RAG_DOCS_DIR, EMBEDDING_MODEL_NAME
 from dotenv import load_dotenv
 load_dotenv()
-from config import CHROMA_DB_PATH, RAG_DOCS_DIR
 
 from langchain_chroma import Chroma
 from langchain.schema import Document
 from langchain_voyageai import VoyageAIEmbeddings
 
-embeddings = VoyageAIEmbeddings(model="voyage-3.5-lite")
+embeddings = VoyageAIEmbeddings(model=EMBEDDING_MODEL_NAME)
 
 """
 voyage-3.5-lite

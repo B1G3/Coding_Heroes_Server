@@ -2,37 +2,36 @@ import logging
 logger = logging.getLogger(__name__)
 logger.info("llm_handler logger")
 
+from config import CHROMA_DB_PATH, PROMPT_PATH
 from dotenv import load_dotenv
 load_dotenv()
-from config import CHROMA_DB_PATH, PROMPT_PATH
 
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_anthropic import ChatAnthropic
 
-from core.vector_utils import get_retriever, get_vectorestore, check_chroma_db_status
+from core.retriever import get_retriever
 
 chain = None
 
+def llm_model():
+    return ChatAnthropic(
+        model="claude-3-5-sonnet-latest",
+        temperature=0,
+        max_tokens=1024,
+        timeout=None,
+        max_retries=2,
+        # other params...
+    )
 
-# -------------------------------------------------------- chain 생성 (서버 실행시 한번만 호출) ----------------------------------------------------------
-def setup_chain():
-    global chain
-    print("=== setup_chain 디버깅 시작 ===")
-    
+def prompttemplate():
+    # 1) Get SYSTEM PROMPT
     with open(PROMPT_PATH, "r", encoding="utf-8") as f:
         SYSTEM_PROMPT = f.read()
     print(f"✅ System prompt 로드 완료 (길이: {len(SYSTEM_PROMPT)} 문자)")
 
-    vectorestore = get_vectorestore()
-    print(f"✅ Chroma 벡터스토어 로드 완료 (경로: {CHROMA_DB_PATH})")
-    
-    check_chroma_db_status(vectorestore)
-
-    retriever = get_retriever(vectorestore)
-    print("✅ Retriever 생성 완료")
-    
-    # ChatPromptTemplate 정의
+    # 2) Generate PROMPT TEMPLATE
     prompt_template = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
         
@@ -42,19 +41,16 @@ def setup_chain():
             플레이어의 블록 코딩 json: {json_str}
 
             플레이어의 질문: {user_question}
+
+            플레이어의 블록 코딩 json은 플레이어 질문이 블록 코딩에 대한 피드백을 요구할 때만 참고해.
+            단순히 인사를 하거나 게임 시스템에 대한 질문을 할 때는 블록 코딩 json을 참고할 필요 없어.
+            
         """)
     ])
-    print("✅ ChatPromptTemplate 생성 완료")
+    return prompt_template
 
-    # LLM 및 RAG 체인 구성
-    from langchain_openai import ChatOpenAI
-    llm = ChatOpenAI(model="gpt-4o", temperature=0)
-
-    # from langchain_anthropic import ChatAnthropic
-    # llm = ChatAnthropic(
-    #     model="claude-sonnet-4-20250725",
-    #     temperature=0,
-    # )
+def setup_chain():
+    global chain
 
     def format_docs(docs):
         context_str = "\n\n".join(doc.page_content for doc in docs)
@@ -74,10 +70,10 @@ def setup_chain():
         {
             "user_question": RunnablePassthrough(),
             "json_str": RunnablePassthrough(),
-            "context": RunnablePassthrough() | get_stage_query | retriever | format_docs,
+            "context": RunnablePassthrough() | get_stage_query | get_retriever() | format_docs,
         }
-        | prompt_template
-        | llm
+        | prompttemplate()
+        | llm_model()
         | StrOutputParser()
     )
     print("✅ Chain 구성 완료")
@@ -95,7 +91,6 @@ def initialize_chain():
 def is_chain_initialized():
     """chain이 초기화되었는지 확인하는 함수"""
     return chain is not None
-
 
 
 from core.database import select_playrecord
