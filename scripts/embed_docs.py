@@ -9,6 +9,7 @@ from typing import List
 import os
 import glob
 from uuid import uuid4
+import shutil
 
 from config import CHROMA_DB_PATH, RAG_DOCS_DIR, EMBEDDING_MODEL_NAME
 from dotenv import load_dotenv
@@ -110,6 +111,10 @@ def similarity_search(vector_store):
 
 
 def embed_docs():
+    # 0) 기존 ChromaDB 폴더 삭제
+    if os.path.exists(CHROMA_DB_PATH):
+        print(f"기존 DB 삭제: {CHROMA_DB_PATH}")
+        shutil.rmtree(CHROMA_DB_PATH)
     
     # 1) rag_docs 폴더의 모든 .md 파일 찾기
     files = get_files()
