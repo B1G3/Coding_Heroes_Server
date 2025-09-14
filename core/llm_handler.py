@@ -29,17 +29,17 @@ def prompttemplate():
     # 1) Get SYSTEM PROMPT
     with open(PROMPT_PATH, "r", encoding="utf-8") as f:
         SYSTEM_PROMPT = f.read()
-    print(f"✅ System prompt 로드 완료 (길이: {len(SYSTEM_PROMPT)} 문자)")
+    print(f"✅ System prompt 로드")
 
     # 2) Generate PROMPT TEMPLATE
     prompt_template = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
         ("human", """
-# 플레이어의 질문:{user_question}
+# 플레이어의 질문:{question}
 
 # 플레이어의 블록 코딩
 ```json
-{json_str}
+{block_json}
 ```
 
 # 참고 스테이지 문서
@@ -64,18 +64,18 @@ def setup_chain():
         stage = input['stage']
         return f"스테이지 {stage}"
     
-    def user_question(input):
-        return input['user_question']
+    def question(input):
+        return input['question']
 
-    def json_str(input):
-        return input['json_str']
+    def block_json(input):
+        return input['block_json']
         
     
     print("🔧 Chain 구성 시작...")
     chain = (
         {
-            "user_question": user_question,
-            "json_str": json_str,
+            "question": question,
+            "block_json": block_json,
             "context": get_stage_query | get_retriever() | format_docs,
         }
         | prompttemplate()
@@ -99,57 +99,22 @@ def is_chain_initialized():
     return chain is not None
 
 
-from core.database import select_playrecord
+from core.database import select_execution_log
 
 # -------------------------------------------------------- 질의응답 ----------------------------------------------------------
-def chat(user_question: str, stage: str) -> str:
-    """
-    사용자의 질문에 대한 답변을 생성하는 메소드 
+def chat(question: str, stage: str) -> str:
     
-    Args:
-        user_question: 사용자 질문
-        stage: 스테이지 단계 (예: "1", "boss")
-        user_id: 사용자 ID (선택사항)
-        conversation_id: 대화 세션 ID (선택사항)
-    """
     # chain이 초기화되지 않았다면 초기화
     if not is_chain_initialized():
         initialize_chain()
     
-    json_str = select_playrecord(stage=stage)
+    block_json = select_execution_log(stage=stage)
         
     # Chain을 사용하여 응답 생성
     response = chain.invoke({
         "stage": stage,
-        "json_str": json_str,
-        "user_question": user_question,
+        "block_json": block_json,
+        "question": question,
     })
 
     return response
-
-
-# from core.database import select_messages_by_user_and_conversation_id, add_message
-
-# def get_conversation_history(user_id: str, conversation_id: str) -> str:
-#     """
-#     user_id, conv_id로 대화 히스토리 조회
-#     """
-#     messages = select_messages_by_user_and_conversation_id(user_id, conversation_id)
-
-#     conversation_history = []
-#     for msg in messages:
-#         role = "사용자" if msg.role == "human" else "AI"
-#         conversation_history.append(f"{role}: {msg.content}")
-
-#     history = "\n".join(conversation_history)
-    
-#     return history
-
-
-
-# def save_message(user_id: str, conversation_id: str, role: str, content: str):
-#     """
-#     메시지 저장
-#     """
-#     return add_message(user_id, conversation_id, role, content)
-

@@ -76,6 +76,8 @@ async def stt(audio_file: UploadFile = File(...)):
 
 
 from core.services import get_ai_response, text_to_speech
+from core.database import insert_question
+
 
 @router.post("/qa_chatbot", response_model=ChatbotResponse)
 async def qa_chatbot(req: TextRequest):
@@ -83,7 +85,11 @@ async def qa_chatbot(req: TextRequest):
     텍스트 질문에 대한 LLM 답변 생성 후, 답변을 TTS로 변환하여 오디오와 함께 반환하는 API
     """
     try:
-        #TODO: 스테이지, 질문 데이터 저장
+        try:
+            insert_question(stage=req.stage, question=req.text)
+        except TypeError as e:
+            return {"status": f"오류 발생: {str(e)}"}
+
 
         # 1. LLM을 통한 답변 생성
         text_data = get_ai_response(req.text, req.stage)
@@ -115,6 +121,12 @@ async def llm_response_test(req: TextRequest):
     """
     (테스트용) 텍스트 질문에 대한 LLM 답변 생성하여 텍스트만 반환하는 API
     """
+
+    try:
+        insert_question(stage=req.stage, question=req.text)
+    except TypeError as e:
+        return {"status": f"오류 발생: {str(e)}"}
+    
     return get_ai_response(req.text, req.stage)
 
 
@@ -128,17 +140,17 @@ async def tts(req: TextRequest):
     
 
 # ------------------------ 플레이 기록 -------------------------------
-from core.database import save_playrecord
+from core.database import insert_execution_log
 
 class CodingResult(BaseModel):
     stage: str
-    json_str: str
+    block_json: str
 
-@router.post("/playrecord")
+@router.post("/execution_log")
 async def block_coding(request: CodingResult):
     # DB 저장
     try:
-        save_playrecord(request.stage, request.json_str)
+        insert_execution_log(request.stage, request.block_json)
         return {"status": "success"}
 
     except Exception as e:
