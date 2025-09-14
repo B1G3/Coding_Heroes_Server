@@ -102,7 +102,7 @@ def is_chain_initialized():
 from core.database import select_playrecord
 
 # -------------------------------------------------------- 질의응답 ----------------------------------------------------------
-def chat(user_question: str, stage: str="1", user_id: str = None, conversation_id: str = None) -> str:
+def chat(user_question: str, stage: str) -> str:
     """
     사용자의 질문에 대한 답변을 생성하는 메소드 
     
@@ -116,20 +116,15 @@ def chat(user_question: str, stage: str="1", user_id: str = None, conversation_i
     if not is_chain_initialized():
         initialize_chain()
     
-    json_str = select_playrecord(user_id=user_id, stage=stage)
-
+    json_str = select_playrecord(stage=stage)
+        
     # Chain을 사용하여 응답 생성
     response = chain.invoke({
         "stage": stage,
         "json_str": json_str,
         "user_question": user_question,
     })
-    
-    # 대화 내용 저장 (user_id와 conversation_id가 제공된 경우)
-    # if user_id and conversation_id:
-    #     save_message(user_id, conversation_id, "human", user_question)
-    #     save_message(user_id, conversation_id, "ai", response)
-    
+
     return response
 
 

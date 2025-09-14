@@ -121,7 +121,7 @@ def save_playrecord(user_id: str, stage: str, json_str: str):
         db.close()
 
 
-def select_playrecord(user_id: str, stage: str):
+def select_playrecord(stage: str):
     """
     가장 최신 플레이 기록으로 가져오기
     """
@@ -130,7 +130,6 @@ def select_playrecord(user_id: str, stage: str):
         row = (
             db.query(PlayRecord.json_str)
             .filter_by(
-                user_id=user_id,
                 stage=stage
             ).order_by(PlayRecord.timestamp.desc(), PlayRecord.id.desc())
             .limit(1)

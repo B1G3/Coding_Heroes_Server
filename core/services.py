@@ -41,7 +41,5 @@ async def text_to_speech(text: str):
 
     
 # llm 응답
-def get_ai_response(question: str, user_id: str, conversation_id: str):
-    return chat(user_question=question, 
-                user_id=user_id, 
-                conversation_id=conversation_id)
+def get_ai_response(question: str, stage: str="learn"):
+    return chat(question, stage)

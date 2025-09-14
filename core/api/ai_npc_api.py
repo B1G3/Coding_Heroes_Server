@@ -1,15 +1,14 @@
 import logging
 logger = logging.getLogger(__name__)
-import os
-from datetime import datetime
 from fastapi import APIRouter, UploadFile, File, WebSocket
 from pydantic import BaseModel
-
+from typing import Literal
 
 router = APIRouter()
 
 class TextRequest(BaseModel):
     text: str
+    stage: Literal["learn", "boss"]
 
 class STTResponse(BaseModel):
     stt_result: str
@@ -76,9 +75,6 @@ async def stt(audio_file: UploadFile = File(...)):
 #     await stt_stream.process_audio_stream(websocket, None)
 
 
-TEMP_USER_ID = "u001"
-TEMP_CONV_ID = "s001"
-
 from core.services import get_ai_response, text_to_speech
 
 @router.post("/qa_chatbot", response_model=ChatbotResponse)
@@ -87,11 +83,13 @@ async def qa_chatbot(req: TextRequest):
     텍스트 질문에 대한 LLM 답변 생성 후, 답변을 TTS로 변환하여 오디오와 함께 반환하는 API
     """
     try:
+        #TODO: 스테이지, 질문 데이터 저장
+
         # 1. LLM을 통한 답변 생성
-        text_data = get_ai_response(req.text, TEMP_USER_ID, TEMP_CONV_ID)
+        text_data = get_ai_response(req.text, req.stage)
         logger.info(f"ai_response: {text_data}")
 
-        # # 2. TTS 처리 (LLM 답변을 음성으로 변환)
+        # 2. TTS 처리 (LLM 답변을 음성으로 변환)
         b64_data = await text_to_speech(text_data)
 
         return ChatbotResponse(
@@ -117,8 +115,8 @@ async def llm_response_test(req: TextRequest):
     """
     (테스트용) 텍스트 질문에 대한 LLM 답변 생성하여 텍스트만 반환하는 API
     """
-    return get_ai_response(req.text, TEMP_USER_ID, TEMP_CONV_ID)
-    
+    return get_ai_response(req.text, req.stage)
+
 
 # tts 테스트 api
 @router.post("/tts-test")
@@ -128,8 +126,6 @@ async def tts(req: TextRequest):
     """
     return await text_to_speech(req.text)
     
-
-
 
 # ------------------------ 플레이 기록 -------------------------------
 from core.database import save_playrecord
@@ -142,7 +138,7 @@ class CodingResult(BaseModel):
 async def block_coding(request: CodingResult):
     # DB 저장
     try:
-        save_playrecord(TEMP_USER_ID, request.stage, request.json_str)
+        save_playrecord(request.stage, request.json_str)
         return {"status": "success"}
 
     except Exception as e:
