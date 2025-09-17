@@ -4,13 +4,14 @@ import os
 import json
 from dotenv import load_dotenv
 
-from fastapi import APIRouter, UploadFile, File, WebSocket, Header
+from fastapi import APIRouter, UploadFile, File, WebSocket, Header, BackgroundTasks
 from pydantic import BaseModel
 from typing import Literal, Any, Optional
 
 from core.services import speech_to_text, text_to_speech
 from core.llm_handler import get_ai_response
 from core.utils import save_uploaded_audio
+from core.analysis.analysis_service import update_ai_analysis_for_client
 
 # === DB repos ===
 from core.database_client.supabase_client import get_supabase
@@ -139,10 +140,15 @@ async def qa_chatbot(req: TextRequest,
 # ----------------- LLM 응답 테스트 -----------------
 @router.post("/llm-response-test")
 async def llm_response_test(req: TextRequest, 
+                            background_tasks: BackgroundTasks,
                             x_client_id: Optional[str] = Header(default=None, convert_underscores=False)):
     try:
         client_uuid = _resolve_client_id(x_client_id)
         _questions_repo().save(client_id=client_uuid, stage=req.stage, question=req.text)
+
+         # 👉 비동기 분석 업데이트 (실패해도 응답에는 영향 없음)
+        if client_uuid:
+            background_tasks.add_task(update_ai_analysis_for_client, client_uuid)
     except Exception as e:
         logger.exception("❌ Error saving question (test)")
 
@@ -196,3 +202,6 @@ async def execution_log(request: CodingResult,
         logger.exception("❌ Error saving execution log")
         print(f"❌ Error saving execution log: {e}")
         return {"status": f"오류 발생: {str(e)}"}
+    
+
+    # TODO 추후엔 스테이지가 끝날때마다 분석 테이블에 반영하거나 갱신된 데이터만 분석하여 반영하는 등 수정 필요
