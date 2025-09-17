@@ -102,7 +102,9 @@ async def stt(audio_file: UploadFile = File(...)):
 # ----------------- QA + TTS -----------------
 @router.post("/qa_chatbot", response_model=ChatbotResponse)
 async def qa_chatbot(req: TextRequest, 
-                     x_client_id: Optional[str] = Header(default=None, convert_underscores=False)):
+                     x_client_id: Optional[str] = Header(default=None)):
+    logger.info(f"[qa_chatbot] raw X-Client-Id header = {x_client_id}")
+
     """
     텍스트 질문에 대한 LLM 답변 생성 후, 답변을 TTS로 변환하여 오디오와 함께 반환하는 API
     """
@@ -141,7 +143,9 @@ async def qa_chatbot(req: TextRequest,
 @router.post("/llm-response-test")
 async def llm_response_test(req: TextRequest, 
                             background_tasks: BackgroundTasks,
-                            x_client_id: Optional[str] = Header(default=None, convert_underscores=False)):
+                            x_client_id: Optional[str] = Header(default=None)):
+    logger.info(f"[llm-response-test] raw X-Client-Id header = {x_client_id}")
+
     try:
         client_uuid = _resolve_client_id(x_client_id)
         _questions_repo().save(client_id=client_uuid, stage=req.stage, question=req.text)
@@ -156,6 +160,7 @@ async def llm_response_test(req: TextRequest,
         resp_str = get_ai_response(question=req.text, stage=req.stage, client_id=client_uuid)
         logger.info(f"AI RESPONSE: {resp_str}")
         return resp_str
+        # return ""
     
     except Exception as e:
         logger.exception("❌ Error running get_ai_response")
@@ -205,3 +210,7 @@ async def execution_log(request: CodingResult,
     
 
     # TODO 추후엔 스테이지가 끝날때마다 분석 테이블에 반영하거나 갱신된 데이터만 분석하여 반영하는 등 수정 필요
+
+
+
+
