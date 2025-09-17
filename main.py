@@ -2,7 +2,6 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from core.api.ai_npc_api import router as ai_npc_router
-from core.database import init_db
 from core.llm_handler import initialize_chain
 
 """
@@ -43,12 +42,9 @@ FastAPI의 이벤트 핸들러 데코레이터
 "shutdown": 앱 종료 시
 """
 
-# 앱 시작 시 데이터베이스 초기화 및 chain 초기화
+
 @app.on_event("startup")
 async def startup_event():
-    # 데이터베이스 초기화
-    init_db()
-    
     # LLM chain 초기화
     try:
         initialize_chain()

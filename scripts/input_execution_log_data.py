@@ -1,23 +1,7 @@
 
 base_url = "https://jolly-accepted-bonefish.ngrok-free.app"
 
-
 import requests
-
-
-def save_execution_log_test(stage, block_json_str):
-    endpoint = "ai_npc/execution_log"
-    url = f"{base_url}/{endpoint}"
-
-    payload = {
-        "stage": stage,
-        "block_json": block_json_str
-    }
-    response = requests.post(url, json=payload)
-
-    print("Status Code", response.status_code)
-    # print("Response", response.json())
-
 
 
 if __name__ == "__main__":
@@ -48,4 +32,13 @@ if __name__ == "__main__":
     block_json_str = json.dumps(block_json, ensure_ascii=False)
     print(block_json_str)
 
-    save_execution_log_test(stage, block_json_str)
+    endpoint = "ai_npc/execution_log"
+    url = f"{base_url}/{endpoint}"
+
+    payload = {
+        "stage": stage,
+        "block_json": block_json_str
+    }
+    response = requests.post(url, json=payload)
+
+    print("Status Code", response.status_code)
