@@ -99,17 +99,22 @@ def is_chain_initialized():
     return chain is not None
 
 
-from core.database_client.sqlite_client import select_execution_log
+from core.repositories.execution_logs import ExecutionLogsRepo
+from core.database_client.supabase_client import get_supabase
+
 
 # -------------------------------------------------------- 질의응답 ----------------------------------------------------------
-def chat(question: str, stage: str) -> str:
+def get_ai_response(question: str, client_id: str, stage: str="learn") -> str:
     
     # chain이 초기화되지 않았다면 초기화
     if not is_chain_initialized():
         initialize_chain()
     
-    block_json = select_execution_log(stage=stage)
-        
+    # stage, client_id로 block_json 조회
+    repo = ExecutionLogsRepo(get_supabase())
+    latest_log = repo.get_latest_one(client_id=client_id, stage=stage)
+    block_json = latest_log["block_json"] if latest_log else {}
+
     # Chain을 사용하여 응답 생성
     response = chain.invoke({
         "stage": stage,

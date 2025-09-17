@@ -5,8 +5,6 @@ from datetime import datetime
 
 from fastapi import UploadFile
 
-from core.llm_handler import chat
-
 from core.stt import STT
 from core.tts import TTS
 
@@ -38,10 +36,5 @@ async def text_to_speech(text: str):
         logging.error(f"qa_chatbot_tts 처리 중 오류 발생: {str(e)}")
         raise
 
-
-    
-# llm 응답
-def get_ai_response(question: str, stage: str="learn"):
-    return chat(question, stage)
 
 
