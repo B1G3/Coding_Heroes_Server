@@ -2,9 +2,9 @@
 대화 기록을 고려한 chat 함수 테스트 스크립트
 """
 
-from core.database import init_db
+from core.database_client.sqlite_client import init_db
 from core.llm_handler import chat
-from core.database import SessionLocal
+from core.database_client.sqlite_client import SessionLocal
 from core.models import Base, User, Message
 from core.llm_handler import initialize_chain
 

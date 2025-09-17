@@ -4,6 +4,8 @@ from fastapi import APIRouter, UploadFile, File, WebSocket
 from pydantic import BaseModel
 from typing import Literal
 
+from database_client import supabase_client as db
+
 router = APIRouter()
 
 class TextRequest(BaseModel):
@@ -63,21 +65,8 @@ async def stt(audio_file: UploadFile = File(...)):
             status=f"error: {str(e)}"
         )
 
-# # WebSocket을 통한 STT 스트리밍
-# @router.websocket("/stt_stream")
-# async def stt_stream(websocket: WebSocket):
-#     """
-#     WebSocket을 통한 실시간 STT 스트리밍 API
-#     """
-#     from core.stt_stream import STTStream
-    
-#     stt_stream = STTStream()
-#     await stt_stream.process_audio_stream(websocket, None)
-
 
 from core.services import get_ai_response, text_to_speech
-from core.database import insert_question
-
 
 @router.post("/qa_chatbot", response_model=ChatbotResponse)
 async def qa_chatbot(req: TextRequest):
@@ -86,9 +75,17 @@ async def qa_chatbot(req: TextRequest):
     """
     try:
         try:
-            insert_question(stage=req.stage, question=req.text)
-        except TypeError as e:
-            return {"status": f"오류 발생: {str(e)}"}
+            db.save_question(
+                stage=req.stage,
+                question=req.text
+            )
+        except Exception as e:
+            print(f"❌ Error saving question: {e}")
+
+        # try:
+        #     insert_question(stage=req.stage, question=req.text)
+        # except TypeError as e:
+        #     return {"status": f"오류 발생: {str(e)}"}
 
 
         # 1. LLM을 통한 답변 생성
@@ -140,15 +137,23 @@ async def tts(req: TextRequest):
     
 
 # ------------------------ 플레이 기록 -------------------------------
-from core.database import insert_execution_log
+from core.database_client.sqlite_client import insert_execution_log
+
 
 class CodingResult(BaseModel):
     stage: str
     block_json: str
 
 @router.post("/execution_log")
-async def block_coding(request: CodingResult):
+async def execution_log(request: CodingResult):
     # DB 저장
+    try:
+        db.save_execution_log(
+            stage=request.stage,
+            client_id=request.block_json)
+    except Exception as e:
+        print(f"❌ Error saving execution log: {e}")
+
     try:
         insert_execution_log(request.stage, request.block_json)
         return {"status": "success"}

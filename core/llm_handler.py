@@ -99,7 +99,7 @@ def is_chain_initialized():
     return chain is not None
 
 
-from core.database import select_execution_log
+from core.database_client.sqlite_client import select_execution_log
 
 # -------------------------------------------------------- 질의응답 ----------------------------------------------------------
 def chat(question: str, stage: str) -> str:

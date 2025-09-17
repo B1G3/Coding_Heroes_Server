@@ -1,25 +1,19 @@
-from datetime import datetime
+import uuid
+from typing import Any, Dict, Optional
+from pydantic import BaseModel, Field
 
-from sqlalchemy.orm import declarative_base, relationship
+class ExecutionLogIn(BaseModel):
+    client_id: uuid.UUID
+    stage: str
+    block_json: Dict[str, Any]
 
-from sqlalchemy import Column, String, Text, DateTime, Integer
+class ExecutionLogOut(BaseModel):
+    id: Optional[str] = None
+    client_id: uuid.UUID
+    stage: str
+    block_json: Dict[str, Any]
+    created_at: str
 
-Base = declarative_base()
-
-class Questions(Base):
-    __tablename__ = "questions"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    stage = Column(String, nullable=False)
-
-    question = Column(Text)
-    timestamp = Column(DateTime, default=datetime.now)
-
-class ExecutionLogs(Base):
-    __tablename__ = "execution_logs"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    stage = Column(String, nullable=False)
-
-    block_json = Column(Text, nullable=False)
-    timestamp = Column(DateTime, default=datetime.now)
+class LatestQuery(BaseModel):
+    client_id: uuid.UUID
+    stage: str
