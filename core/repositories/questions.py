@@ -29,10 +29,4 @@ class QuestionsRepo:
             .insert(data)
             .execute()
         )
-    
-
-    def get
-
-// 플레이어별 모든 질문
-// 보스 질문
-// 학습 스테이지 질문
+     
