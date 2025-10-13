@@ -2,9 +2,7 @@
 *.wav
 *.db
 __pycache__
-
-/models
-/outputs
+*.pt
 
 chroma_db
 .vscode

@@ -25,16 +25,28 @@ async def speech_to_text(audio_file: UploadFile):
         raise
 
 
+
+from pathlib import Path
+
+# 폴백 WAV 경로 (윈도우 경로는 raw string으로)
+FALLBACK_WAV = Path(r"C:\workspace\Coding_Heroes_Server\data\lexy_response_audio.wav")
+
+
 async def text_to_speech(text: str):
     try:
         audio_content = await tts.run(text)
-        b64_data = base64.b64encode(audio_content).decode("utf-8")
-
-        return b64_data
     
     except Exception as e:
-        logging.error(f"qa_chatbot_tts 처리 중 오류 발생: {str(e)}")
-        raise
+        logging.error(f"qa_chatbot_tts 처리 중 오류 발생: {str(e)} \n -> 임시 오디오 파일로 대체합니다.")
+        with open(FALLBACK_WAV, 'rb') as f:
+            audio_content = f.read()
+        
+    b64_data = base64.b64encode(audio_content).decode("utf-8")
+    return b64_data
+
+
+
+
 
 
 
